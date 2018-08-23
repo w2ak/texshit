@@ -1,15 +1,22 @@
-%\setlength\hoffset{1cm}
-%\setlength\voffset{-1cm}
+% This shifts the page location on paper
+% Horizontal shift (right)
+\setlength\hoffset{10mm}
+% Vertical shift (down)
+\setlength\voffset{5mm}
 
+% Article. Oneside or Twoside mode is set by the Makefile at compilation.
 \documentclass[a4paper]{article}
 
+% tikz package to draw the layout
 \usepackage{tikz}
+% positioning library for the 'right=<distance> of <node>' syntax
 \usetikzlibrary{positioning}
+% titlesec package to set custom pagestyle
 \usepackage[pagestyles]{titlesec}
+% lipsum package for random text
 \usepackage{lipsum}
 
-\setlength\fboxsep{0pt}
-
+% Detect twoside mode
 \makeatletter
 \if@twoside
   \edef\pagemode{TWO-SIDED}
@@ -20,32 +27,79 @@
 \fi
 \makeatother
 
-\makeatother
+% Display layout
 \newcommand{\displaylayout}{%
-  \begin{tikzpicture}[remember picture,overlay,x=5mm,y=5mm,%
-    box/.style={inner sep=0,line width=0,fill=green,fill opacity=.1,%
-    anchor=north west,text width=\paperwidth,text height=\paperheight}]
+  \begin{tikzpicture}[remember picture,overlay,
+    box/.style={%
+      inner sep=0,line width=0,
+      fill=green,fill opacity=.1,
+      anchor=north west,
+      text width=\paperwidth,text height=\paperheight
+    }]
+    % the 'current page' node is provided by tikz and available thanks to the
+    % 'remember picture, overlay' options
     \path (current page.north west)
-      ++(-\hoffset,-\voffset) node[box,fill opacity=.05]
-      (paper) {}
-      ++(\hoffset,-\voffset) node[box,fill opacity=.05]
-      (page) {}
-      ++(1in,-1in) node[box,fill=blue]
-      (reference) {}
+      % correct the mistake made by tikz when positioning current page
+      ++(-\hoffset,-\voffset)
+        node[box,fill opacity=.05]
+        (paper) {}
+      % apply the offset to get the page, possibly shifted relatively to the pdf
+      % page
+      ++(\hoffset,-\voffset)
+        node[box,fill opacity=.05]
+        (page) {}
+      % the reference point of latex is 1inch,1inch right,down of the top left
+      % corner of the page (and not of the paper)
+      ++(1in,-1in)
+        node[box,fill=blue]
+        (reference) {}
+      % move right by the odd|even side margin value
+      % move down by the top margin value
       ++(\ifodd\value{page}\oddsidemargin\else\evensidemargin\fi,-\topmargin)
-        node[box,fill=red,%
-          text width=\textwidth,%
-          text height={\headheight+\headsep+\textheight+\footskip}] (print) {}
-        node[box,fill=red,text width=\textwidth,text height=\headheight] (head) {}
+        % print area includes header, text, footer
+        node[box,fill=red,
+          text width=\textwidth,
+          text height={\headheight+\headsep+\textheight+\footskip}]
+        (print) {}
+        % header area
+        node[box,fill=red,
+          text width=\textwidth,
+          text height=\headheight]
+        (head) {}
+      % move down by the header size and the header separation with text
       ++(0,{-\headheight-\headsep})
-      node[box,fill=red,text width=\textwidth,text height=\textheight] (text) {}
+        % text area
+        node[box,fill=red,
+          text width=\textwidth,
+          text height=\textheight]
+        (text) {}
+      % move down by the text height and footer height
+      % you're now at the bottom of the print area
       ++(0,{-\textheight-\footskip})
-      node[box,anchor=south west,fill=red,text width=\textwidth,text height=\headheight] (foot) {};
-    \node[box,fill=red,\ifodd\value{page}right\else\evenmarginside\fi=\marginparsep  of text,text width=\marginparwidth,text height=\textheight] (marginpar) {};
-    \node[anchor=north west] at (paper.north west) {\pagemode\ DOCUMENT, PAGE \thepage};
+        % footer area
+        % drawn from the bottom, hence 'anchor=south west'
+        % footer doesn't have any height, use header height just to draw
+        node[box,fill=red,
+          anchor=south west,
+          text width=\textwidth,
+          text height=\headheight]
+        (foot) {};
+
+    % draw margin paragraphs area, left or right of text area
+    \node[box,fill=red,
+        \ifodd\value{page}right\else\evenmarginside\fi=\marginparsep  of text,
+        text width=\marginparwidth,
+        text height=\textheight]
+      (marginpar) {};
+
+    % document and page information at top left of paper
+    \node[anchor=north west] at (paper.north west)
+      {\pagemode\ DOCUMENT, PAGE \thepage};
   \end{tikzpicture}
 }
 
+% Headers and footers setup
+% Use them also to add the tikzfigure showing the layout on every page
 \newpagestyle{mystyle}{%
   \sethead[LEFT EVEN][CENTER EVEN\displaylayout{}][RIGHT EVEN]
           {LEFT ODD}{CENTER ODD\displaylayout{}}{RIGHT ODD}
@@ -53,7 +107,10 @@
           {LEFT ODD}{CENTER ODD}{RIGHT ODD}
 }
 
+% Apply custom pagestyle
 \pagestyle{mystyle}
+
 \begin{document}
+% Lorem ipsum dolor sit amet,
 \lipsum[1-10]
 \end{document}
