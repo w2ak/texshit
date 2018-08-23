@@ -1,0 +1,59 @@
+%\setlength\hoffset{1cm}
+%\setlength\voffset{-1cm}
+
+\documentclass[a4paper]{article}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usepackage[pagestyles]{titlesec}
+\usepackage{lipsum}
+
+\setlength\fboxsep{0pt}
+
+\makeatletter
+\if@twoside
+  \edef\pagemode{TWO-SIDED}
+  \edef\evenmarginside{left}
+\else
+  \edef\pagemode{ONE-SIDED}
+  \edef\evenmarginside{right}
+\fi
+\makeatother
+
+\makeatother
+\newcommand{\displaylayout}{%
+  \begin{tikzpicture}[remember picture,overlay,x=5mm,y=5mm,%
+    box/.style={inner sep=0,line width=0,fill=green,fill opacity=.1,%
+    anchor=north west,text width=\paperwidth,text height=\paperheight}]
+    \path (current page.north west)
+      ++(-\hoffset,-\voffset) node[box,fill opacity=.05]
+      (paper) {}
+      ++(\hoffset,-\voffset) node[box,fill opacity=.05]
+      (page) {}
+      ++(1in,-1in) node[box,fill=blue]
+      (reference) {}
+      ++(\ifodd\value{page}\oddsidemargin\else\evensidemargin\fi,-\topmargin)
+        node[box,fill=red,%
+          text width=\textwidth,%
+          text height={\headheight+\headsep+\textheight+\footskip}] (print) {}
+        node[box,fill=red,text width=\textwidth,text height=\headheight] (head) {}
+      ++(0,{-\headheight-\headsep})
+      node[box,fill=red,text width=\textwidth,text height=\textheight] (text) {}
+      ++(0,{-\textheight-\footskip})
+      node[box,anchor=south west,fill=red,text width=\textwidth,text height=\headheight] (foot) {};
+    \node[box,fill=red,\ifodd\value{page}right\else\evenmarginside\fi=\marginparsep  of text,text width=\marginparwidth,text height=\textheight] (marginpar) {};
+    \node[anchor=north west] at (paper.north west) {\pagemode\ DOCUMENT, PAGE \thepage};
+  \end{tikzpicture}
+}
+
+\newpagestyle{mystyle}{%
+  \sethead[LEFT EVEN][CENTER EVEN\displaylayout{}][RIGHT EVEN]
+          {LEFT ODD}{CENTER ODD\displaylayout{}}{RIGHT ODD}
+  \setfoot[LEFT EVEN][CENTER EVEN][RIGHT EVEN]
+          {LEFT ODD}{CENTER ODD}{RIGHT ODD}
+}
+
+\pagestyle{mystyle}
+\begin{document}
+\lipsum[1-10]
+\end{document}
